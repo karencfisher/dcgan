@@ -35,19 +35,15 @@ class DCGAN:
     def __generator(self):
         generator = Sequential([
             Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, 100)),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same'),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same'),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(1, (4, 4), strides=(2, 2), padding='same', 
@@ -64,15 +60,12 @@ class DCGAN:
             LeakyReLU(0.2),
 
             Conv2D(256, (4, 4), strides=(2, 2), padding='same'),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2D(512, (4, 4), strides=(2, 2), padding='same'),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2D(1024, (4, 4), strides=(2, 2), padding='same'),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Flatten(),
@@ -92,7 +85,7 @@ class DCGAN:
         dcgan.compile(optimizer=self.optimizer, loss=self.loss)
         return dcgan
     
-    def train(self, X, num_epochs, batch_size, verbose=5):
+    def train(self, X, num_epochs, batch_size, verbose=5, checkpoint=None):
         d_losses = []
         g_losses = []
         images = tf.image.resize(X, (64, 64))       
@@ -126,6 +119,9 @@ class DCGAN:
         
             d_losses.append(d_loss)
             g_losses.append(g_loss)
+
+            if checkpoint:
+                self.save_model(checkpoint)
 
             if verbose and (epoch == 0 or(epoch + 1) % verbose == 0):
                 self.generate(10, epoch+1, display=True)
