@@ -7,6 +7,7 @@ from tqdm import tqdm
 from tensorflow.keras.models import Sequential, Model, load_model
 from tensorflow.keras.layers import Dense, Conv2DTranspose, Conv2D
 from tensorflow.keras.layers import LeakyReLU, Flatten, Input
+from tensorflow.keras.layers import BatchNormalization
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
@@ -34,15 +35,19 @@ class DCGAN:
     def __generator(self):
         generator = Sequential([
             Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, 100)),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same'),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same'),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(1, (4, 4), strides=(2, 2), padding='same', 
@@ -59,12 +64,15 @@ class DCGAN:
             LeakyReLU(0.2),
 
             Conv2D(256, (4, 4), strides=(2, 2), padding='same'),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2D(512, (4, 4), strides=(2, 2), padding='same'),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2D(1024, (4, 4), strides=(2, 2), padding='same'),
+            BatchNormalization(),
             LeakyReLU(0.2),
 
             Flatten(),
