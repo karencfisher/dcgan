@@ -7,20 +7,19 @@ from tqdm import tqdm
 from tensorflow.keras.models import Sequential, Model, load_model
 from tensorflow.keras.layers import Dense, Conv2DTranspose, Conv2D
 from tensorflow.keras.layers import LeakyReLU, Flatten, Input
-from tensorflow.keras.layers import BatchNormalization
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
 
 
 class DCGAN:
-    def __init__(self, lr=2e-4, model_path=None):
+    def __init__(self, channels=1, lr=2e-4, model_path=None):
         self.optimizer = Adam(learning_rate=lr)
         self.loss = BinaryCrossentropy()
 
         if model_path is None:
-            self.generator = self.__generator()
-            self.discriminator = self.__discriminator()
+            self.generator = self.__generator(channels=channels)
+            self.discriminator = self.__discriminator(channels=channels)
             self.dcgan = self.__dcgan()
         else:
             disc_file = os.path.join(model_path, 'discrminator.h5')
@@ -32,7 +31,7 @@ class DCGAN:
             dcgan_file = os.path.join(model_path, 'dcgan.h5')
             self.dcgan = load_model(dcgan_file)
 
-    def __generator(self):
+    def __generator(self, channels=1):
         generator = Sequential([
             Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, 100)),
             LeakyReLU(0.2),
@@ -46,17 +45,17 @@ class DCGAN:
             Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'),
             LeakyReLU(0.2),
 
-            Conv2DTranspose(1, (4, 4), strides=(2, 2), padding='same', 
+            Conv2DTranspose(channels, (4, 4), strides=(2, 2), padding='same', 
                             activation='tanh')
         ])
 
         generator.compile(optimizer=self.optimizer, loss=self.loss)
         return generator
 
-    def __discriminator(self):
+    def __discriminator(self, channels=1):
         discriminator = Sequential([
             Conv2D(128, (4, 4), strides=(2, 2), padding='same', 
-                   input_shape=(64, 64, 1)),
+                   input_shape=(64, 64, channels)),
             LeakyReLU(0.2),
 
             Conv2D(256, (4, 4), strides=(2, 2), padding='same'),
@@ -85,7 +84,7 @@ class DCGAN:
         dcgan.compile(optimizer=self.optimizer, loss=self.loss)
         return dcgan
     
-    def train(self, X, num_epochs, batch_size, verbose=5, checkpoint=None):
+    def train(self, X, num_epochs, batch_size, verbose=5, checkpoint_path=None):
         d_losses = []
         g_losses = []
         images = tf.image.resize(X, (64, 64))       
@@ -120,8 +119,8 @@ class DCGAN:
             d_losses.append(d_loss)
             g_losses.append(g_loss)
 
-            if checkpoint:
-                self.save_model(checkpoint)
+            if checkpoint_path:
+                self.save_model(checkpoint_path)
 
             if verbose and (epoch == 0 or(epoch + 1) % verbose == 0):
                 self.generate(10, epoch+1, display=True)
@@ -138,9 +137,10 @@ class DCGAN:
             fig, ax = plt.subplots(rows, 5, figsize=(5, 3))
             fig.patch.set_facecolor('white')
             for indx in range(n_examples):
-                img = gen_imgs[indx].reshape(64, 64)
+                img = gen_imgs[indx] * 127.5 + 127.5
+                img = img.astype(int)
                 i, j = indx // 5, indx % 5
-                ax[i, j].imshow(img, cmap='gray')
+                ax[i, j].imshow(img, cmap=plt.cm.binary)
                 ax[i, j].set_xticks([])
                 ax[i, j].set_yticks([])
 
