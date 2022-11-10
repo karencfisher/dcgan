@@ -131,7 +131,7 @@ class DCGAN:
         elapsed_time %= 3600
         min = int(elapsed_time // 60)
         sec = int(elapsed_time % 60)
-        print(f'Total training time: {hr}:{min}:{sec: .2f}')
+        print(f'Total training time: {hr}:{min:02d}:{sec:02d}')
         return d_losses, g_losses
 
     def generate(self, n_examples, epoch=None, display=False):
