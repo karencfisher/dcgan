@@ -87,7 +87,8 @@ class DCGAN:
     def train(self, X, num_epochs, batch_size, verbose=5, checkpoint_path=None):
         d_losses = []
         g_losses = []
-        images = tf.image.resize(X, (64, 64))       
+        images = tf.image.resize(X, (64, 64))
+        start_time = time.time()      
 
         for epoch in range(num_epochs):
             batch_count = int(X.shape[0] / batch_size)
@@ -125,6 +126,12 @@ class DCGAN:
             if verbose and (epoch == 0 or(epoch + 1) % verbose == 0):
                 self.generate(10, epoch+1, display=True)
         
+        elapsed_time = time.time() - start_time
+        hr = int(elapsed_time // 3600)
+        elapsed_time %= 3600
+        min = int(elapsed_time // 60)
+        sec = int(elapsed_time % 60)
+        print(f'Total training time: {hr}:{min}:{sec: .2f}')
         return d_losses, g_losses
 
     def generate(self, n_examples, epoch=None, display=False):
@@ -151,6 +158,9 @@ class DCGAN:
         return gen_imgs
 
     def save_model(self, model_path):
+        if not os.path.exists(model_path):
+            os.mkdir(model_path)
+            
         disc_file = os.path.join(model_path, 'discrminator.h5')
         self.discriminator.save(disc_file)
 
