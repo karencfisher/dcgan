@@ -30,6 +30,7 @@ class DCGAN:
     def __init__(self, channels=1, lr=4e-4, model_path=None):
         self.optimizer = RMSprop(learning_rate=lr, clipvalue=1.0, decay=1e-8)
         self.loss = BinaryCrossentropy()
+        self.preprocessor = Preprocessor()
 
         if model_path is None:
             self.generator = self.__generator(channels=channels)
@@ -151,7 +152,7 @@ class DCGAN:
         print(f'Total training time: {hr}:{min:02d}:{sec:02d}')
         return d_losses, g_losses
 
-    def generate(self, n_examples, preprocessor, epoch=None, display=False):
+    def generate(self, n_examples, epoch=None, display=False):
         noise = np.random.normal(0, 1, size=(n_examples, 100))
         gen_imgs = self.generator.predict(noise, verbose=0)
 
@@ -162,7 +163,7 @@ class DCGAN:
             fig.patch.set_facecolor('white')
             for indx in range(n_examples):
                 img = gen_imgs[indx]
-                img = preprocessor.inverse(img)
+                img = self.preprocessor.inverse(img)
                 img = img.astype(int)
                 i, j = indx // 5, indx % 5
                 ax[i, j].imshow(img, cmap=plt.cm.binary)
