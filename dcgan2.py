@@ -27,7 +27,8 @@ class Preprocessor:
 
 
 class DCGAN:
-    def __init__(self, channels=1, lr=4e-4, model_path=None):
+    def __init__(self, channels=1, lr=4e-4, latent_dim=100, model_path=None):
+        self.latent_dim = latent_dim
         self.optimizer = RMSprop(learning_rate=lr, clipvalue=1.0, decay=1e-8)
         self.loss = BinaryCrossentropy()
         self.preprocessor = Preprocessor()
@@ -114,7 +115,7 @@ class DCGAN:
                 stop = start + batch_size
                 real_imgs = images[start: stop]
             
-                noise = np.random.normal(0, 1, size=(batch_size, 100))
+                noise = np.random.normal(0, 1, size=(batch_size, self.latent_dim))
                 generated_imgs = self.generator.predict(noise, verbose=0)
                 imgs = np.concatenate([real_imgs, generated_imgs])
             
@@ -126,7 +127,7 @@ class DCGAN:
                 self.discriminator.trainable = True
                 d_loss = self.discriminator.train_on_batch(imgs, labels)
 
-                noise = np.random.normal(0, 1, size=(batch_size, 100))
+                noise = np.random.normal(0, 1, size=(batch_size, self.latent_dim))
                 noise = 1 / (1 + np.exp(-noise))
                 real_y = np.ones((batch_size, 1))
 
@@ -153,7 +154,7 @@ class DCGAN:
         return d_losses, g_losses
 
     def generate(self, n_examples, epoch=None, display=False):
-        noise = np.random.normal(0, 1, size=(n_examples, 100))
+        noise = np.random.normal(0, 1, size=(n_examples, self.latent_dim))
         gen_imgs = self.generator.predict(noise, verbose=0)
 
         if display:
