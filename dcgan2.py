@@ -99,7 +99,7 @@ class DCGAN:
                 stop = start + batch_size
                 real_imgs = images[start: stop]
             
-                noise = np.random.normal(0, 1, size=(batch_size, 100))
+                noise = np.random.normal(size=(batch_size, 100))
                 generated_imgs = self.generator.predict(noise, verbose=0)
                 imgs = np.concatenate([real_imgs, generated_imgs])
             
@@ -110,7 +110,7 @@ class DCGAN:
                 self.discriminator.trainable = True
                 d_loss = self.discriminator.train_on_batch(imgs, labels)
 
-                noise = np.random.normal(0, 1, size=(batch_size, 100))
+                noise = np.random.normal(size=(batch_size, 100))
                 real_y = np.ones((batch_size, 1))
 
                 self.discriminator.trainable = False
@@ -136,7 +136,7 @@ class DCGAN:
         return d_losses, g_losses
 
     def generate(self, n_examples, epoch=None, display=False):
-        noise = np.random.normal(0, 1, size=(n_examples, 100))
+        noise = np.random.normal(size=(n_examples, 100))
         gen_imgs = self.generator.predict(noise, verbose=0)
 
         if display:
@@ -145,8 +145,7 @@ class DCGAN:
             fig, ax = plt.subplots(rows, 5, figsize=(5, 3))
             fig.patch.set_facecolor('white')
             for indx in range(n_examples):
-                img = gen_imgs[indx] * 127.5 + 127.5
-                img = img.astype(int)
+                img = gen_imgs[indx]
                 i, j = indx // 5, indx % 5
                 ax[i, j].imshow(img, cmap=plt.cm.binary)
                 ax[i, j].set_xticks([])
