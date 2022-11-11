@@ -5,16 +5,16 @@ import time
 from tqdm import tqdm
 
 from tensorflow.keras.models import Sequential, Model, load_model
-from tensorflow.keras.layers import Dense, Conv2DTranspose, Conv2D
+from tensorflow.keras.layers import Dense, Conv2DTranspose, Conv2D, Dropout
 from tensorflow.keras.layers import LeakyReLU, Flatten, Input, Reshape
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.losses import BinaryCrossentropy
 
 
 class DCGAN:
-    def __init__(self, channels=1, lr=2e-4, model_path=None):
-        self.optimizer = Adam(learning_rate=lr)
+    def __init__(self, channels=1, lr=8e-4, model_path=None):
+        self.optimizer = RMSprop(learning_rate=lr, clipvalue=1.0, decay=1e-8)
         self.loss = BinaryCrossentropy()
 
         if model_path is None:
@@ -33,45 +33,42 @@ class DCGAN:
 
     def __generator(self, channels=1):
         generator = Sequential([
-            Dense(channels * 16, input_shape=(100,)),
-            LeakyReLU(0.2),
-            Reshape((4, 4, channels)),
+            Dense(128 * 16 * 16, input_shape=(100,)),
+            LeakyReLU(),
+            Reshape((16, 16, 128)),
 
-            Conv2D(1024, (1, 1)),
-            LeakyReLU(0.2),
-
-            Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same'),
-            LeakyReLU(0.2),
+            Conv2D(256, (5, 5), padding='same'),
+            LeakyReLU(),
 
             Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same'),
-            LeakyReLU(0.2),
+            LeakyReLU(),
 
-            Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'),
-            LeakyReLU(0.2),
+            Conv2D(256, (5, 5), padding='same'),
+            LeakyReLU(),
+            Conv2D(256, (5, 5), padding='same'),
+            LeakyReLU(),
 
-            Conv2DTranspose(channels, (4, 4), strides=(2, 2), padding='same', 
-                            activation='tanh')
+            Conv2D(channels, (7, 7), activation='tanh', padding='same')
         ])
-
-        generator.compile(optimizer=self.optimizer, loss=self.loss)
+        
         return generator
 
     def __discriminator(self, channels=1):
         discriminator = Sequential([
-            Conv2D(128, (4, 4), strides=(2, 2), padding='same', 
-                   input_shape=(64, 64, channels)),
-            LeakyReLU(0.2),
+            Conv2D(128, (3, 3), input_shape=(32, 32, channels)),
+            LeakyReLU(),
 
-            Conv2D(256, (4, 4), strides=(2, 2), padding='same'),
-            LeakyReLU(0.2),
+            Conv2D(128, (4, 4), strides=(2, 2)),
+            LeakyReLU(),
 
-            Conv2D(512, (4, 4), strides=(2, 2), padding='same'),
-            LeakyReLU(0.2),
+            Conv2D(512, (4, 4), strides=(2, 2)),
+            LeakyReLU(),
 
-            Conv2D(1024, (4, 4), strides=(2, 2), padding='same'),
-            LeakyReLU(0.2),
+            Conv2D(1024, (4, 4), strides=(2, 2)),
+            LeakyReLU(),
 
             Flatten(),
+            Dropout(0.4),
             Dense(1, activation='sigmoid')
         ])
 
@@ -91,7 +88,7 @@ class DCGAN:
     def train(self, X, num_epochs, batch_size, verbose=5, checkpoint_path=None):
         d_losses = []
         g_losses = []
-        images = tf.image.resize(X, (64, 64))
+        images = tf.image.resize(X, (32, 32))
         start_time = time.time()      
 
         for epoch in range(num_epochs):
