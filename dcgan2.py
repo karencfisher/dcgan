@@ -49,7 +49,7 @@ class DCGAN:
 
     def __generator(self, channels=1):
         generator = Sequential([
-            Dense(128 * 16 * 16, input_shape=(100,)),
+            Dense(128 * 16 * 16, input_shape=(self.latent_dim,)),
             LeakyReLU(),
             Reshape((16, 16, 128)),
 
@@ -93,7 +93,7 @@ class DCGAN:
 
     def __dcgan(self):
         self.discriminator.trainable = False
-        gan_input = Input(shape=(100,))
+        gan_input = Input(shape=(self.latent_dim,))
         generated_img = self.generator(gan_input)
         gan_output = self.discriminator(generated_img)
         dcgan = Model(gan_input, gan_output)
