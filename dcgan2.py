@@ -12,8 +12,22 @@ from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.losses import BinaryCrossentropy
 
 
+class Preprocessor:
+    def fit(self, X):
+        self.mean = np.mean(X)
+        self.std = np.std(X)
+
+    def transform(self, X):
+        Z = (X - self.mean) / self.std
+        return Z
+
+    def inverse(self, Z):
+        X = Z * self.std + self.mean
+        return X
+
+
 class DCGAN:
-    def __init__(self, channels=1, lr=8e-4, model_path=None):
+    def __init__(self, channels=1, lr=4e-4, model_path=None):
         self.optimizer = RMSprop(learning_rate=lr, clipvalue=1.0, decay=1e-8)
         self.loss = BinaryCrossentropy()
 
@@ -99,18 +113,20 @@ class DCGAN:
                 stop = start + batch_size
                 real_imgs = images[start: stop]
             
-                noise = np.random.normal(size=(batch_size, 100))
+                noise = np.random.normal(0, 1, size=(batch_size, 100))
                 generated_imgs = self.generator.predict(noise, verbose=0)
                 imgs = np.concatenate([real_imgs, generated_imgs])
             
-                real_y = np.ones((batch_size, 1)) * 0.9
+                real_y = np.ones((batch_size, 1))
                 fake_y = np.zeros((batch_size, 1))
                 labels = np.concatenate([real_y, fake_y])
+                labels += 0.05 * np.random.random(labels.shape)
 
                 self.discriminator.trainable = True
                 d_loss = self.discriminator.train_on_batch(imgs, labels)
 
-                noise = np.random.normal(size=(batch_size, 100))
+                noise = np.random.normal(0, 1, size=(batch_size, 100))
+                noise = 1 / (1 + np.exp(-noise))
                 real_y = np.ones((batch_size, 1))
 
                 self.discriminator.trainable = False
@@ -135,8 +151,8 @@ class DCGAN:
         print(f'Total training time: {hr}:{min:02d}:{sec:02d}')
         return d_losses, g_losses
 
-    def generate(self, n_examples, epoch=None, display=False):
-        noise = np.random.normal(size=(n_examples, 100))
+    def generate(self, n_examples, preprocessor, epoch=None, display=False):
+        noise = np.random.normal(0, 1, size=(n_examples, 100))
         gen_imgs = self.generator.predict(noise, verbose=0)
 
         if display:
@@ -146,6 +162,8 @@ class DCGAN:
             fig.patch.set_facecolor('white')
             for indx in range(n_examples):
                 img = gen_imgs[indx]
+                img = preprocessor.inverse(img)
+                img = img.astype(int)
                 i, j = indx // 5, indx % 5
                 ax[i, j].imshow(img, cmap=plt.cm.binary)
                 ax[i, j].set_xticks([])
