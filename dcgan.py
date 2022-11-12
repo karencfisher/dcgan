@@ -13,16 +13,20 @@ from tensorflow.keras.losses import BinaryCrossentropy
 
 
 class Preprocessor:
+    '''
+    Center the image data and divide by the nex maximum value
+    e.g., if pixels in range [0, 255] subtract 127.5 to center
+    and divide by 127.5
+    '''
     def fit(self, X):
-        self.mean = np.mean(X)
-        self.std = np.std(X)
+        self.median = np.max(X) / 2
 
     def transform(self, X):
-        Z = (X.astype(np.float32) - self.mean) / self.std
+        Z = (X.astype(np.float32) - self.median) / self.median
         return Z
 
     def inverse(self, Z):
-        X = Z * self.std + self.mean
+        X = Z * self.median + self.median
         return X
 
 
