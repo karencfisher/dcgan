@@ -18,11 +18,11 @@ class Preprocessor:
         self.std = np.std(X)
 
     def transform(self, X):
-        Z = (X - self.mean) / self.std
+        Z = (X - self.mean) / self.mean
         return Z
 
     def inverse(self, Z):
-        X = Z * self.std + self.mean
+        X = Z * self.mean + self.mean
         return X
 
 
