@@ -32,7 +32,7 @@ class DCGAN:
         if preprocessor is None:
             self.preprocessor = Preprocessor()
         else:
-            self.preprocessor = preprocessor()
+            self.preprocessor = preprocessor
 
         self.optimizer = optimizer(learning_rate=lr)
         self.loss = BinaryCrossentropy()
