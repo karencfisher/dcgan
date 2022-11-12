@@ -18,7 +18,7 @@ class Preprocessor:
         self.std = np.std(X)
 
     def transform(self, X):
-        Z = (X - self.mean) / self.std
+        Z = (X.astype(np.float32) - self.mean) / self.std
         return Z
 
     def inverse(self, Z):
