@@ -18,11 +18,11 @@ class Preprocessor:
         self.std = np.std(X)
 
     def transform(self, X):
-        Z = (X - self.mean) / self.mean
+        Z = (X - self.mean) / self.std
         return Z
 
     def inverse(self, Z):
-        X = Z * self.mean + self.mean
+        X = Z * self.std + self.mean
         return X
 
 
@@ -32,7 +32,7 @@ class DCGAN:
         if preprocessor is None:
             self.preprocessor = Preprocessor()
         else:
-            self.preprocessor = preprocessor
+            self.preprocessor = preprocessor()
 
         self.optimizer = optimizer(learning_rate=lr)
         self.loss = BinaryCrossentropy()
