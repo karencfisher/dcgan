@@ -31,14 +31,18 @@ class Preprocessor:
 
 
 class DCGAN:
-    def __init__(self, preprocessor=None, channels=1, optimizer=Adam, 
+    def __init__(self, preprocessor=None, channels=1, optimizer=None, 
                  lr=2e-4, latent_dim=100, model_path=None):
         if preprocessor is None:
             self.preprocessor = Preprocessor()
         else:
             self.preprocessor = preprocessor
 
-        self.optimizer = optimizer(learning_rate=lr)
+        if optimizer is None:
+            self.optimizer = Adam(learning_rate=lr)
+        else:
+            self.optimizer = optimizer
+            
         self.loss = BinaryCrossentropy()
         self.latent_dim = latent_dim
 
