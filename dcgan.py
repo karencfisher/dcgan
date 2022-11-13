@@ -16,7 +16,7 @@ class Preprocessor:
     '''
     Center the image data and divide by the nex maximum value
     e.g., if pixels in range [0, 255] subtract 127.5 to center
-    and divide by 127.5
+    and divide by 127.5, resulting in distribution -1 to 1
     '''
     def fit(self, X):
         self.median = np.max(X) / 2
