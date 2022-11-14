@@ -11,6 +11,7 @@ from tensorflow.keras.layers import ReLU, BatchNormalization
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
+from tensorflow.keras import initializers
 
 
 class Preprocessor:
@@ -40,13 +41,14 @@ class DCGAN:
             self.preprocessor = preprocessor
 
         if optimizer is None:
-            self.optimizer = Adam(learning_rate=lr)
+            self.optimizer = Adam(learning_rate=lr, beta_1=0.5)
         else:
             self.optimizer = optimizer
             
         self.loss = BinaryCrossentropy()
         self.latent_dim = latent_dim
         self.input_shape = input_shape
+        self.w_init = initializers.RandomNormal(mean=0, stddev=0.02)
 
         if model_path is None:
             self.generator = self.__generator(channels=input_shape[2])
@@ -64,23 +66,28 @@ class DCGAN:
 
     def __generator(self, channels=1):
         generator = Sequential([
-            Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, self.latent_dim)),
+            Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, self.latent_dim),
+                            kernel_initializer=self.w_init),
             BatchNormalization(),
             ReLU(),
 
-            Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same'),
+            Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same',
+                            kernel_initializer=self.w_init),
             BatchNormalization(),
             ReLU(),
 
-            Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same'),
+            Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same',
+                            kernel_initializer=self.w_init),
             BatchNormalization(),
             ReLU(),
 
-            Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'),
+            Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same',
+                            kernel_initializer=self.w_init),
             BatchNormalization(),
             ReLU(),
 
-            Conv2DTranspose(channels, (4, 4), strides=(2, 2), padding='same', 
+            Conv2DTranspose(channels, (4, 4), strides=(2, 2), padding='same',
+                            kernel_initializer=self.w_init, 
                             activation='tanh')
         ])
 
@@ -90,18 +97,22 @@ class DCGAN:
     def __discriminator(self, channels=1):
         discriminator = Sequential([
             Conv2D(128, (4, 4), strides=(2, 2), padding='same', 
-                   input_shape=(64, 64, channels)),
+                   input_shape=(64, 64, channels),
+                   kernel_initializer=self.w_init),
             LeakyReLU(0.2),
 
-            Conv2D(256, (4, 4), strides=(2, 2), padding='same'),
+            Conv2D(256, (4, 4), strides=(2, 2), padding='same',
+                   kernel_initializer=self.w_init),
             BatchNormalization(),
             LeakyReLU(0.2),
 
-            Conv2D(512, (4, 4), strides=(2, 2), padding='same'),
+            Conv2D(512, (4, 4), strides=(2, 2), padding='same',
+                   kernel_initializer=self.w_init),
             BatchNormalization(),
             LeakyReLU(0.2),
 
-            Conv2D(1024, (4, 4), strides=(2, 2), padding='same'),
+            Conv2D(1024, (4, 4), strides=(2, 2), padding='same',
+                   kernel_initializer=self.w_init),
             BatchNormalization(),
             LeakyReLU(0.2),
 
