@@ -167,7 +167,7 @@ class DCGAN:
     def generate(self, n_examples, epoch=None, display=False):
         noise = np.random.normal(0, 1, size=(n_examples, 1, 1, self.latent_dim))
         gen_imgs = self.generator.predict(noise, verbose=0)
-        gen_images = tf.image.resize(gen_images, self.input_size[:2])
+        gen_imgs = tf.image.resize(gen_imgs, self.input_size[:2])
 
         if display:
             rows = n_examples // 5
