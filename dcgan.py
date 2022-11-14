@@ -31,7 +31,7 @@ class Preprocessor:
 
 
 class DCGAN:
-    def __init__(self, preprocessor=None, channels=1, optimizer=None, 
+    def __init__(self, input_shape, preprocessor=None, optimizer=None, 
                  lr=2e-4, latent_dim=100, model_path=None):
         if preprocessor is None:
             self.preprocessor = Preprocessor()
@@ -45,10 +45,11 @@ class DCGAN:
             
         self.loss = BinaryCrossentropy()
         self.latent_dim = latent_dim
+        self.input_shape = input_shape
 
         if model_path is None:
-            self.generator = self.__generator(channels=channels)
-            self.discriminator = self.__discriminator(channels=channels)
+            self.generator = self.__generator(channels=input_shape[2])
+            self.discriminator = self.__discriminator(channels=input_shape[2])
             self.dcgan = self.__dcgan()
         else:
             disc_file = os.path.join(model_path, 'discrminator.h5')
@@ -166,6 +167,7 @@ class DCGAN:
     def generate(self, n_examples, epoch=None, display=False):
         noise = np.random.normal(0, 1, size=(n_examples, 1, 1, self.latent_dim))
         gen_imgs = self.generator.predict(noise, verbose=0)
+        gen_images = tf.image.resize(gen_images, self.input_size[:2])
 
         if display:
             rows = n_examples // 5
@@ -187,8 +189,8 @@ class DCGAN:
         return gen_imgs
 
     def save_model(self, model_path):
-        # if not os.path.exists(model_path):
-        #     os.mkdir(model_path)
+        if not os.path.exists(model_path):
+            os.mkdir(model_path)
             
         disc_file = os.path.join(model_path, 'discrminator.h5')
         self.discriminator.save(disc_file)
