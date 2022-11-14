@@ -52,7 +52,7 @@ class DCGAN:
             self.discriminator = self.__discriminator(channels=input_shape[2])
             self.dcgan = self.__dcgan()
         else:
-            disc_file = os.path.join(model_path, 'discrminator.h5')
+            disc_file = os.path.join(model_path, 'discriminator.h5')
             self.discriminator = load_model(disc_file)
 
             gen_file = os.path.join(model_path, 'generator.h5')
@@ -192,7 +192,7 @@ class DCGAN:
         if not os.path.exists(model_path):
             os.mkdir(model_path)
             
-        disc_file = os.path.join(model_path, 'discrminator.h5')
+        disc_file = os.path.join(model_path, 'discriminator.h5')
         self.discriminator.save(disc_file)
 
         gen_file = os.path.join(model_path, 'generator.h5')
