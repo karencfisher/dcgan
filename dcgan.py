@@ -133,7 +133,8 @@ class DCGAN:
         dcgan.compile(optimizer=self.optimizer, loss=self.loss)
         return dcgan
     
-    def train(self, X, num_epochs, batch_size, begin=0, verbose=5, checkpoint_path=None):
+    def train(self, X, num_epochs, batch_size, begin=0, verbose=5, image_path=None, 
+              checkpoint_path=None):
         d_losses = []
         g_losses = []
         images = tf.image.resize(X, (64, 64))
@@ -173,7 +174,7 @@ class DCGAN:
                 self.save_model(checkpoint_path)
 
             if verbose and (epoch == 0 or(epoch + 1) % verbose == 0):
-                self.generate(10, begin+epoch+1, display=True)
+                self.generate(10, begin+epoch+1, display=True, image_folder=image_path)
         
         elapsed_time = time.time() - start_time
         hr = int(elapsed_time // 3600)
