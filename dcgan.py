@@ -187,8 +187,8 @@ class DCGAN:
         return gen_imgs
 
     def save_model(self, model_path):
-        if not os.path.exists(model_path):
-            os.mkdir(model_path)
+        # if not os.path.exists(model_path):
+        #     os.mkdir(model_path)
             
         disc_file = os.path.join(model_path, 'discrminator.h5')
         self.discriminator.save(disc_file)
