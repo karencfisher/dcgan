@@ -164,29 +164,37 @@ class DCGAN:
         print(f'Total training time: {hr}:{min:02d}:{sec:02d}')
         return d_losses, g_losses
 
-    def generate(self, n_examples, epoch=None, display=False):
+    def generate(self, n_examples, epoch=None, display=False, image_folder=None):
         noise = np.random.normal(0, 1, size=(n_examples, 1, 1, self.latent_dim))
         gen_imgs = self.generator.predict(noise, verbose=0)
         gen_imgs = tf.image.resize(gen_imgs, self.input_shape[:2]).numpy()
 
         if display:
-            rows = n_examples // 5
-            rows += 1 if n_examples % 5 > 0 else 0
-            fig, ax = plt.subplots(rows, 5, figsize=(5, 3))
-            fig.patch.set_facecolor('white')
-            for indx in range(n_examples):
-                img = self.preprocessor.inverse(gen_imgs[indx])
-                img = img.astype(int)
-                i, j = indx // 5, indx % 5
-                ax[i, j].imshow(img, cmap=plt.cm.binary)
-                ax[i, j].set_xticks([])
-                ax[i, j].set_yticks([])
-
-            label = 'Epoch {0}'.format(epoch)
-            fig.text(0.5, 0.04, label, ha='center')
-            plt.show()
+            self.display_samples(n_examples, gen_imgs, epoch, image_folder)
             
         return gen_imgs
+
+    def display_samples(self, n_examples, gen_imgs, epoch, image_folder):
+        rows = n_examples // 5
+        rows += 1 if n_examples % 5 > 0 else 0
+        fig, ax = plt.subplots(rows, 5, figsize=(5, 3))
+        fig.patch.set_facecolor('white')
+        for indx in range(n_examples):
+            img = self.preprocessor.inverse(gen_imgs[indx])
+            img = img.astype(int)
+            i, j = indx // 5, indx % 5
+            ax[i, j].imshow(img, cmap=plt.cm.binary)
+            ax[i, j].set_xticks([])
+            ax[i, j].set_yticks([])
+
+        label = 'Epoch {0}'.format(epoch)
+        fig.text(0.5, 0.04, label, ha='center')
+        if image_folder is not None:
+            if not os.path.exists(image_folder):
+                os.mkdir(image_folder)
+            file_path = os.path.join(image_folder, f'epoch_{epoch}.jpg')
+            plt.savefig(file_path)
+        plt.show()
 
     def save_model(self, model_path):
         if not os.path.exists(model_path):
