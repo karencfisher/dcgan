@@ -124,7 +124,7 @@ class DCGAN:
             batch_count = int(X.shape[0] / batch_size)
             start = 0
 
-            for _ in tqdm(range(batch_count), ascii=True, desc=f'Epoch {epoch+1}'):
+            for _ in tqdm(range(batch_count), ascii=True, desc=f'Epoch {begin+epoch+1}'):
                 stop = start + batch_size
                 real_imgs = images[start: stop]
             
@@ -153,8 +153,8 @@ class DCGAN:
             if checkpoint_path:
                 self.save_model(checkpoint_path)
 
-            if verbose and (epoch == 0 or(begin + epoch + 1) % verbose == 0):
-                self.generate(10, epoch+1, display=True)
+            if verbose and (epoch == 0 or(epoch + 1) % verbose == 0):
+                self.generate(10, begin+epoch+1, display=True)
         
         elapsed_time = time.time() - start_time
         hr = int(elapsed_time // 3600)
