@@ -68,22 +68,18 @@ class DCGAN:
         generator = Sequential([
             Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, self.latent_dim),
                             kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same',
                             kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same',
                             kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same',
                             kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2DTranspose(channels, (4, 4), strides=(2, 2), padding='same',
@@ -103,17 +99,14 @@ class DCGAN:
 
             Conv2D(256, (4, 4), strides=(2, 2), padding='same',
                    kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2D(512, (4, 4), strides=(2, 2), padding='same',
                    kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Conv2D(1024, (4, 4), strides=(2, 2), padding='same',
                    kernel_initializer=self.w_init),
-            BatchNormalization(),
             LeakyReLU(0.2),
 
             Flatten(),
