@@ -4,14 +4,9 @@ import os
 import time
 from tqdm import tqdm
 
-from tensorflow.keras.models import Sequential, Model, load_model
-from tensorflow.keras.layers import Dense, Conv2DTranspose, Conv2D
-from tensorflow.keras.layers import LeakyReLU, Flatten, Input
-from tensorflow.keras.layers import ReLU, BatchNormalization
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.losses import BinaryCrossentropy
-from tensorflow.keras import initializers
+from tensorflow import keras
+from tensorflow.keras import layers
 
 
 class Preprocessor:
@@ -33,22 +28,9 @@ class Preprocessor:
 
 
 class DCGAN:
-    def __init__(self, input_shape, preprocessor=None, optimizer=None, 
-                 lr=2e-4, latent_dim=100, model_path=None):
-        if preprocessor is None:
-            self.preprocessor = Preprocessor()
-        else:
-            self.preprocessor = preprocessor
-
-        if optimizer is None:
-            self.optimizer = Adam(learning_rate=lr, beta_1=0.5)
-        else:
-            self.optimizer = optimizer
-            
-        self.loss = BinaryCrossentropy()
+    def __init__(self, input_shape, lr=2e-4, latent_dim=100, model_path=None):
         self.latent_dim = latent_dim
         self.input_shape = input_shape
-        self.w_init = initializers.RandomNormal(mean=0, stddev=0.02)
 
         if model_path is None:
             self.generator = self.__generator(channels=input_shape[2])
@@ -56,75 +38,68 @@ class DCGAN:
             self.dcgan = self.__dcgan()
         else:
             disc_file = os.path.join(model_path, 'discriminator.h5')
-            self.discriminator = load_model(disc_file)
+            self.discriminator = keras.load_model(disc_file)
 
             gen_file = os.path.join(model_path, 'generator.h5')
-            self.generator = load_model(gen_file)
+            self.generator = keras.load_model(gen_file)
 
             dcgan_file = os.path.join(model_path, 'dcgan.h5')
-            self.dcgan = load_model(dcgan_file)
+            self.dcgan = keras.load_model(dcgan_file)
+        self.__compile_models()
 
     def __generator(self, channels=1):
-        generator = Sequential([
-            Conv2DTranspose(1024, (4, 4), input_shape=(1, 1, self.latent_dim),
-                            kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2DTranspose(512, (4, 4), strides=(2, 2), padding='same',
-                            kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2DTranspose(256, (4, 4), strides=(2, 2), padding='same',
-                            kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same',
-                            kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2DTranspose(channels, (4, 4), strides=(2, 2), padding='same',
-                            kernel_initializer=self.w_init, 
-                            activation='tanh')
-        ])
-
-        generator.compile(optimizer=self.optimizer, loss=self.loss)
+        generator = keras.Sequential(
+            [
+                keras.Input(shape=(self.latent_dim,)),
+                layers.Dense(8 * 8 * 128),
+                layers.Reshape((8, 8, 128)),
+                layers.Conv2DTranspose(128, kernel_size=4, strides=2, padding="same"),
+                layers.LeakyReLU(alpha=0.2),
+                layers.Conv2DTranspose(256, kernel_size=4, strides=2, padding="same"),
+                layers.LeakyReLU(alpha=0.2),
+                layers.Conv2DTranspose(512, kernel_size=4, strides=2, padding="same"),
+                layers.LeakyReLU(alpha=0.2),
+                layers.Conv2D(3, kernel_size=5, padding="same", activation="tanh"),
+            ],
+            name="generator",
+        )
         return generator
 
     def __discriminator(self, channels=1):
-        discriminator = Sequential([
-            Conv2D(128, (4, 4), strides=(2, 2), padding='same', 
-                   input_shape=(64, 64, channels),
-                   kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2D(256, (4, 4), strides=(2, 2), padding='same',
-                   kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2D(512, (4, 4), strides=(2, 2), padding='same',
-                   kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Conv2D(1024, (4, 4), strides=(2, 2), padding='same',
-                   kernel_initializer=self.w_init),
-            LeakyReLU(0.2),
-
-            Flatten(),
-            Dense(1, activation='sigmoid')
-        ])
-
-        discriminator.compile(optimizer=self.optimizer, loss=self.loss)
+        discriminator = keras.Sequential(
+            [
+                keras.Input(shape=self.input_shape),
+                layers.Conv2D(64, kernel_size=4, strides=2, padding="same"),
+                layers.LeakyReLU(alpha=0.2),
+                layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
+                layers.LeakyReLU(alpha=0.2),
+                layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
+                layers.LeakyReLU(alpha=0.2),
+                layers.Flatten(),
+                layers.Dropout(0.2),
+                layers.Dense(1, activation="sigmoid"),
+            ],
+            name="discriminator",
+        )
         return discriminator
 
     def __dcgan(self):
         self.discriminator.trainable = False
-        gan_input = Input(shape=(1, 1, self.latent_dim))
+        gan_input = layers.Input(shape=(1, 1, self.latent_dim))
         generated_img = self.generator(gan_input)
         gan_output = self.discriminator(generated_img)
-        dcgan = Model(gan_input, gan_output)
-
-        dcgan.compile(optimizer=self.optimizer, loss=self.loss)
+        dcgan = keras.Model(gan_input, gan_output)
         return dcgan
+    
+    def __compile_models(self):
+        """Compiles the discriminator and DCGAN models."""
+        self.discriminator.compile(loss='binary_crossentropy',
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5),
+            metrics=['accuracy'])
+        self.generator.compile(loss='binary_crossentropy', 
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5))  # Compile the generator
+        self.dcgan.compile(loss='binary_crossentropy',
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5))
     
     def train(self, X, num_epochs, batch_size, begin=0, verbose=5, image_path=None, 
               checkpoint_path=None):
