@@ -68,7 +68,7 @@ class DCGAN:
     def __discriminator(self, channels=1):
         discriminator = keras.Sequential(
             [
-                keras.Input(shape=self.input_shape),
+                keras.Input(shape=()),
                 layers.Conv2D(64, kernel_size=4, strides=2, padding="same"),
                 layers.LeakyReLU(alpha=0.2),
                 layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
@@ -85,7 +85,7 @@ class DCGAN:
 
     def __dcgan(self):
         self.discriminator.trainable = False
-        gan_input = layers.Input(shape=(1, 1, self.latent_dim))
+        gan_input = layers.Input(shape=(self.latent_dim))
         generated_img = self.generator(gan_input)
         gan_output = self.discriminator(generated_img)
         dcgan = keras.Model(gan_input, gan_output)
