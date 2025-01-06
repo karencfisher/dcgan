@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import time
 from tqdm import tqdm
+import gc
 
 import tensorflow as tf
 from tensorflow import keras
@@ -136,6 +137,10 @@ class DCGAN:
                 g_loss = self.dcgan.train_on_batch(noise, real_y)
 
                 start += batch_size
+                
+                # Clear memory
+                del real_imgs, noise, generated_imgs, imgs, real_y, fake_y, labels
+                gc.collect()
         
             d_losses.append(d_loss)
             g_losses.append(g_loss)
