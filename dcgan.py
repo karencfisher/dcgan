@@ -34,7 +34,7 @@ class DCGAN:
         self.preprocessor = Preprocessor()
 
         if model_path is None:
-            self.generator = self.__generator()
+            self.generator = self.__generator(channels=input_shape[2])
             self.discriminator = self.__discriminator(channels=input_shape[2])
             self.dcgan = self.__dcgan()
         else:
@@ -48,7 +48,7 @@ class DCGAN:
             self.dcgan = keras.load_model(dcgan_file)
         self.__compile_models()
 
-    def __generator(self):
+    def __generator(self, channels=1):
         generator = keras.Sequential(
             [
                 keras.Input(shape=(1, 1, self.latent_dim)),
@@ -61,7 +61,7 @@ class DCGAN:
                 layers.LeakyReLU(alpha=0.2),
                 layers.Conv2DTranspose(512, kernel_size=4, strides=2, padding="same"),
                 layers.LeakyReLU(alpha=0.2),
-                layers.Conv2D(3, kernel_size=5, padding="same", activation="tanh"),
+                layers.Conv2D(channels, kernel_size=5, padding="same", activation="tanh"),
             ],
             name="generator",
         )
