@@ -109,16 +109,11 @@ class DCGAN:
         d_losses = []
         g_losses = []
         images = tf.image.resize(X, (64, 64))
+        dataset = tf.data.Dataset.from_tensor_slices(images).batch(batch_size)
         start_time = time.time()      
 
         for epoch in range(num_epochs):
-            batch_count = int(X.shape[0] / batch_size)
-            start = 0
-
-            for _ in tqdm(range(batch_count), ascii=True, desc=f'Epoch {begin+epoch+1}'):
-                stop = start + batch_size
-                real_imgs = images[start: stop]
-            
+            for real_imgs in tqdm(dataset, ascii=True, desc=f'Epoch {begin+epoch+1}'):
                 noise = np.random.normal(0, 1, size=(batch_size, 1, 1, self.latent_dim))
                 generated_imgs = self.generator.predict(noise, verbose=0)
                 imgs = np.concatenate([real_imgs, generated_imgs])
@@ -135,8 +130,6 @@ class DCGAN:
 
                 self.discriminator.trainable = False
                 g_loss = self.dcgan.train_on_batch(noise, real_y)
-
-                start += batch_size
                 
                 # Clear memory
                 del real_imgs, noise, generated_imgs, imgs, real_y, fake_y, labels
@@ -150,6 +143,9 @@ class DCGAN:
 
             if verbose and (epoch == 0 or(epoch + 1) % verbose == 0):
                 self.generate(10, begin+epoch+1, display=True, image_folder=image_path)
+
+            # Clear TensorFlow session
+            tf.keras.backend.clear_session()
         
         elapsed_time = time.time() - start_time
         hr = int(elapsed_time // 3600)
