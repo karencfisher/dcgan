@@ -118,8 +118,9 @@ class DCGAN:
                 generated_imgs = self.generator.predict(noise, verbose=0)
                 imgs = np.concatenate([real_imgs, generated_imgs])
             
-                real_y = np.ones((batch_size, 1)) * 0.9
-                fake_y = np.zeros((batch_size, 1))
+                num_labels = imgs.shape[0]
+                real_y = np.ones((num_labels, 1)) * 0.9
+                fake_y = np.zeros((num_labels, 1))
                 labels = np.concatenate([real_y, fake_y])
 
                 self.discriminator.trainable = True
