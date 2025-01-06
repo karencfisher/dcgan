@@ -31,6 +31,7 @@ class DCGAN:
     def __init__(self, input_shape, lr=2e-4, latent_dim=100, model_path=None):
         self.latent_dim = latent_dim
         self.input_shape = input_shape
+        self.preprocessor = Preprocessor()
 
         if model_path is None:
             self.generator = self.__generator()
