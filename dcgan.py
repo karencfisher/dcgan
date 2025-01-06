@@ -86,7 +86,7 @@ class DCGAN:
 
     def __dcgan(self):
         self.discriminator.trainable = False
-        gan_input = layers.Input(shape=(self.latent_dim,))
+        gan_input = layers.Input(shape=(1, 1, self.latent_dim))
         generated_img = self.generator(gan_input)
         gan_output = self.discriminator(generated_img)
         dcgan = keras.Model(gan_input, gan_output)
